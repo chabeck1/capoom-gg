@@ -1,11 +1,25 @@
-# Gaussian Grouping [ECCV'24]
+# CAPOOM-GG: Gaussian Grouping for AV Testing
 
-> [**Gaussian Grouping: Segment and Edit Anything in 3D Scenes**](https://arxiv.org/abs/2312.00732)           
-> [[Project Page]](https://ymq2017.github.io/gaussian-grouping)           
-> ECCV 2024  
-> ETH Zurich
+**Based on**: [Gaussian Grouping](https://arxiv.org/abs/2312.00732) [ECCV'24] - ETH Zurich
 
-We propose Gaussian Grouping, which extends Gaussian Splatting to jointly **reconstruct** and **segment** anything in open-world 3D scenes via **lifting 2D SAM**. It also efficiently supports versatile 3D scene **editing** tasks. Refer to our [paper](https://arxiv.org/abs/2312.00732) for more details.
+This repository contains our CAPOOM project implementation for creating digital twins of street scenes for autonomous vehicle testing.
+
+---
+
+## 🚀 Quick Start for Team Members
+
+**→ [TEAM_SETUP.md](TEAM_SETUP.md)** - Complete setup guide for new team members
+
+**→ [docs_user/CAPOOM_WORKFLOW.md](docs_user/CAPOOM_WORKFLOW.md)** - Our project workflow
+
+---
+
+## About Gaussian Grouping
+
+Gaussian Grouping extends Gaussian Splatting to jointly **reconstruct** and **segment** anything in open-world 3D scenes via **lifting 2D SAM**. It efficiently supports versatile 3D scene **editing** tasks.
+
+- **Original Paper**: https://arxiv.org/abs/2312.00732
+- **Project Page**: https://ymq2017.github.io/gaussian-grouping
 
 <img width="1000" alt="image" src='media/teaser_github_demo.gif'>
 
@@ -69,10 +83,32 @@ For evaluation on the **LERF-Mask dataset** proposed in our paper, you can refer
 You can select the 3D object for removal and inpainting after training. Details are in the [edit removal inpaint document](./docs/edit_removal_inpaint.md).
 
 
-Citation
----------------
-If you find Gaussian Grouping useful in your research or refer to the provided baseline results, please star :star: this repository and consider citing :pencil::
-```
+---
+
+## 📚 Documentation
+
+### Our Team Documentation (Start Here!)
+- **[TEAM_SETUP.md](TEAM_SETUP.md)** - Setup guide for new team members
+- **[docs_user/](docs_user/)** - Complete workflow and user guides
+  - CAPOOM_WORKFLOW.md - Main project workflow
+  - QUICK_START.md - Quick reference
+  - USER_GUIDE.md - Comprehensive guide
+  - EDIT_BY_TEXT.md - Text-based editing
+  - TRAINING_GUIDE.md - Training procedures
+
+### Original Gaussian Grouping Documentation
+- **[docs/install.md](docs/install.md)** - Original installation guide
+- **[docs/train.md](docs/train.md)** - Original training guide
+- **[docs/dataset.md](docs/dataset.md)** - LERF-Mask dataset
+- **[docs/edit_removal_inpaint.md](docs/edit_removal_inpaint.md)** - Editing guide
+
+---
+
+## Citation
+
+If you use this code, please cite the original Gaussian Grouping paper:
+
+```bibtex
 @inproceedings{gaussian_grouping,
     title={Gaussian Grouping: Segment and Edit Anything in 3D Scenes},
     author={Ye, Mingqiao and Danelljan, Martin and Yu, Fisher and Ke, Lei},
@@ -80,3 +116,11 @@ If you find Gaussian Grouping useful in your research or refer to the provided b
     year={2024}
 }
 ```
+
+---
+
+## License
+
+This project builds upon [Gaussian Grouping](https://github.com/lkeab/gaussian-grouping) (MIT License).
+
+See [LICENSE](LICENSE) for details.
