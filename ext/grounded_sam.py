@@ -73,7 +73,15 @@ def grouned_sam_output(groundingdino_model, sam_predictor, TEXT_PROMPT, image, B
         box_threshold=BOX_TRESHOLD, 
         text_threshold=TEXT_TRESHOLD
     )
-    annotated_frame = annotate(image_source=image_source, boxes=boxes, logits=logits, phrases=phrases)
+    try:
+        annotated_frame = annotate(image_source=image_source, boxes=boxes, logits=logits, phrases=phrases)
+    except TypeError:
+        # Newer supervision version - different signature
+        from supervision import Detections, BoxAnnotator
+        import numpy as np
+        detections = Detections(xyxy=box_ops.box_cxcywh_to_xyxy(boxes).cpu().numpy())
+        box_annotator = BoxAnnotator()
+        annotated_frame = box_annotator.annotate(scene=image_source.copy(), detections=detections)
     annotated_frame = annotated_frame[...,::-1] # BGR to RGB
 
     # set image
