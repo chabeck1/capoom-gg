@@ -20,6 +20,7 @@ from gaussian_renderer import GaussianModel
 import numpy as np
 from PIL import Image
 import cv2
+import json
 
 from ext.grounded_sam import grouned_sam_output, load_model_hf, select_obj_ioa
 from segment_anything import sam_model_registry, SamPredictor
@@ -48,6 +49,16 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
     text_mask, annotated_frame_with_mask = grouned_sam_output(groundingdino_model, sam_predictor, TEXT_PROMPT, image)
     Image.fromarray(annotated_frame_with_mask).save(os.path.join(render_path[:-8],'grounded-sam---'+TEXT_PROMPT+'.png'))
     selected_obj_ids = select_obj_ioa(pred_obj, text_mask)
+    
+    # Save selected object IDs to a JSON file for later use
+    obj_ids_file = os.path.join(render_path[:-8], f'object_ids---{TEXT_PROMPT}.json')
+    with open(obj_ids_file, 'w') as f:
+        json.dump({
+            'text_prompt': TEXT_PROMPT,
+            'object_ids': selected_obj_ids.cpu().tolist(),
+            'num_objects': len(selected_obj_ids)
+        }, f, indent=2)
+    print(f"Selected object IDs for '{TEXT_PROMPT}': {selected_obj_ids.cpu().tolist()}")
 
     for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
         pred_obj_img_path = os.path.join(pred_obj_path,str(idx))
@@ -80,7 +91,7 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
 
 
 
-def render_sets(dataset : ModelParams, iteration : int, pipeline : PipelineParams, skip_train : bool, skip_test : bool):
+def render_sets(dataset : ModelParams, iteration : int, pipeline : PipelineParams, skip_train : bool, skip_test : bool, text_prompts : str = None):
     with torch.no_grad():
         dataset.eval = True
         gaussians = GaussianModel(dataset.sh_degree)
@@ -110,15 +121,21 @@ def render_sets(dataset : ModelParams, iteration : int, pipeline : PipelineParam
         sam.to(device='cuda')
         sam_predictor = SamPredictor(sam)
 
-        # Text prompt
-        if 'figurines' in dataset.model_path:
+        # Text prompt - use custom prompts if provided, otherwise use defaults
+        if text_prompts:
+            positive_input = text_prompts
+            print("Using custom text prompts:", positive_input)
+        elif 'figurines' in dataset.model_path:
             positive_input = "green apple;green toy chair;old camera;porcelain hand;red apple;red toy chair;rubber duck with red hat"
         elif 'ramen' in dataset.model_path:
             positive_input = "chopsticks;egg;glass of water;pork belly;wavy noodles in bowl;yellow bowl"
         elif 'teatime' in dataset.model_path:
             positive_input = "apple;bag of cookies;coffee mug;cookies on a plate;paper napkin;plate;sheep;spoon handle;stuffed bear;tea in a glass"
+        elif 'bear' in dataset.model_path:
+            positive_input = "bear;rocks;ground;grass;trees;stones"
         else:
-            raise NotImplementedError   # You can provide your text prompt here
+            # Default prompts for unknown scenes
+            positive_input = "object;background;floor;wall"
         
         positives = positive_input.split(";")
         print("Text prompts:    ", positives)
@@ -141,10 +158,11 @@ if __name__ == "__main__":
     parser.add_argument("--skip_train", action="store_true")
     parser.add_argument("--skip_test", action="store_true")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--text", type=str, default=None, help="Text prompts separated by semicolons (e.g., 'bear;rocks;ground')")
     args = get_combined_args(parser)
     print("Rendering " + args.model_path)
 
     # Initialize system state (RNG)
     safe_state(args.quiet)
 
-    render_sets(model.extract(args), args.iteration, pipeline.extract(args), args.skip_train, args.skip_test)
+    render_sets(model.extract(args), args.iteration, pipeline.extract(args), args.skip_train, args.skip_test, args.text)

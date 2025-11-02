@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Data files (too large for git)
+data/*/
+!data/.gitkeep
+catalog/*/
+!catalog/.gitkeep
+
+# Output files (generated)
+output/*/
+!output/.gitkeep
+
+# Model checkpoints and cache
+*.pth
+*.ckpt
+hf_cache/
+*.bin
+
+# Logs
+logs/
+*.log
+*.err
+*.out
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+
+# SLURM outputs
+slurm-*.out
+slurm-*.err
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.zip
+*.tar.gz
+*.tar
+
+# Submodules (optional - uncomment if you want to track them differently)
+# submodules/
+
+# Tracking-Anything-with-DEVA (large submodule)
+Tracking-Anything-with-DEVA/
+
+# LaMa inpainting model
+lama/
+
+# Keep important empty directories
+!data/.gitkeep
+!catalog/.gitkeep
+!output/.gitkeep
+!logs/.gitkeep

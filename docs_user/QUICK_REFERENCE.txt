@@ -1,0 +1,117 @@
+╔═══════════════════════════════════════════════════════════════╗
+║        GAUSSIAN GROUPING - GREAT LAKES QUICK REFERENCE        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📍 LOCATION: ~/gaussian-grouping
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 ACTIVATE ENVIRONMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quick:
+  source ~/gaussian-grouping/activate_env.sh
+
+Manual:
+  source ~/.bashrc
+  module load python3.10-anaconda cuda/11.3.0
+  conda activate gaussian_grouping
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  BUILD CUDA EXTENSIONS (REQUIRED - ONE TIME ONLY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1: Edit the SLURM script
+  nano build_extensions.slurm
+  # Change YOUR_ACCOUNT to your Great Lakes account
+
+Step 2: Submit the build job
+  cd ~/gaussian-grouping
+  sbatch build_extensions.slurm
+
+Step 3: Monitor
+  squeue -u $USER
+  
+Step 4: Check results
+  cat build_extensions_*.log
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎮 GPU INTERACTIVE SESSION (Alternative)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Request GPU node:
+  salloc --account=YOUR_ACCOUNT --partition=gpu --gres=gpu:1 \
+         --time=01:00:00 --mem=16G
+
+Build extensions:
+  cd ~/gaussian-grouping
+  bash build_cuda_extensions.sh
+
+Exit:
+  exit
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 RUNNING TRAINING JOBS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Create job script (example: train.slurm):
+  
+  #!/bin/bash
+  #SBATCH --job-name=gg_train
+  #SBATCH --account=YOUR_ACCOUNT
+  #SBATCH --partition=gpu
+  #SBATCH --gres=gpu:1
+  #SBATCH --time=24:00:00
+  #SBATCH --mem=32G
+  #SBATCH --cpus-per-task=8
+  
+  source ~/.bashrc
+  module load python3.10-anaconda cuda/11.3.0
+  conda activate gaussian_grouping
+  
+  cd ~/gaussian-grouping
+  python train.py <your-args>
+
+Submit:
+  sbatch train.slurm
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 MONITORING JOBS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Check your jobs:
+  squeue -u $USER
+
+Cancel a job:
+  scancel <job-id>
+
+Check job details:
+  scontrol show job <job-id>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 USEFUL COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Check GPU availability:
+  sinfo -p gpu -o "%20N %10c %10m %25f %10G"
+
+Test Python environment:
+  python -c "import torch; print(torch.__version__)"
+
+Check CUDA:
+  nvidia-smi  # (only works on GPU nodes)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Full setup guide:      ~/gaussian-grouping/SETUP_README.md
+Original docs:         ~/gaussian-grouping/docs/
+Project page:          https://ymq2017.github.io/gaussian-grouping
+Great Lakes docs:      https://arc.umich.edu/greatlakes/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Remember: Always work on GPU nodes for training/inference!
+   Login nodes are for file management and job submission only.
+
+╚═══════════════════════════════════════════════════════════════╝

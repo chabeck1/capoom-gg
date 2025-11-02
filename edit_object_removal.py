@@ -125,6 +125,11 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
         torchvision.utils.save_image(rendering, os.path.join(render_path, '{0:05d}'.format(idx) + ".png"))
         torchvision.utils.save_image(gt, os.path.join(gts_path, '{0:05d}'.format(idx) + ".png"))
 
+    # Create video if we have rendered images
+    if len(views) == 0:
+        print("No views to create video from")
+        return
+        
     out_path = os.path.join(render_path[:-8],'concat')
     makedirs(out_path,exist_ok=True)
     fourcc = cv2.VideoWriter.fourcc(*'DIVX') 
