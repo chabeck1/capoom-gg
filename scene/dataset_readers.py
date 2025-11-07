@@ -10,6 +10,7 @@ import os
 import sys
 from PIL import Image
 from typing import NamedTuple
+from collections import OrderedDict
 from scene.colmap_loader import read_extrinsics_text, read_intrinsics_text, qvec2rotmat, \
     read_extrinsics_binary, read_intrinsics_binary, read_points3D_binary, read_points3D_text
 from utils.graphics_utils import getWorld2View2, focal2fov, fov2focal
@@ -20,18 +21,80 @@ from plyfile import PlyData, PlyElement
 from utils.sh_utils import SH2RGB
 from scene.gaussian_model import BasicPointCloud
 
-class CameraInfo(NamedTuple):
-    uid: int
-    R: np.array
-    T: np.array
-    FovY: np.array
-    FovX: np.array
-    image: np.array
-    image_path: str
-    image_name: str
-    width: int
-    height: int
-    objects: np.array
+# Global lazy image cache
+class LazyImageCache:
+    """LRU cache for lazy-loading images. Keeps ~500 images in RAM (~2.2GB)."""
+    def __init__(self, max_size=500):
+        self.max_size = max_size
+        self.cache = OrderedDict()
+        self.hits = 0
+        self.misses = 0
+    
+    def get(self, image_path, object_path=None):
+        """Load image from cache or disk."""
+        cache_key = image_path
+        
+        if cache_key in self.cache:
+            # Move to end (most recently used)
+            self.cache.move_to_end(cache_key)
+            self.hits += 1
+            return self.cache[cache_key]
+        
+        # Cache miss - load from disk
+        self.misses += 1
+        image = Image.open(image_path)
+        objects = Image.open(object_path) if object_path and os.path.exists(object_path) else None
+        
+        # Add to cache
+        self.cache[cache_key] = (image, objects)
+        
+        # Evict oldest if cache is full
+        if len(self.cache) > self.max_size:
+            self.cache.popitem(last=False)
+        
+        return image, objects
+    
+    def stats(self):
+        """Return cache statistics."""
+        total = self.hits + self.misses
+        hit_rate = self.hits / total if total > 0 else 0
+        return f"Cache: {len(self.cache)}/{self.max_size} images, hit rate: {hit_rate:.1%} ({self.hits}/{total})"
+
+# Global cache instance
+_image_cache = LazyImageCache(max_size=500)
+
+class CameraInfo:
+    """Camera information with lazy-loaded images."""
+    def __init__(self, uid, R, T, FovY, FovX, image_path, image_name, width, height, object_path=None):
+        self.uid = uid
+        self.R = R
+        self.T = T
+        self.FovY = FovY
+        self.FovX = FovX
+        self.image_path = image_path
+        self.object_path = object_path
+        self.image_name = image_name
+        self.width = width
+        self.height = height
+        self._image = None
+        self._objects = None
+        self._loaded = False
+    
+    @property
+    def image(self):
+        """Lazy-load image from disk or cache."""
+        if not self._loaded:
+            self._image, self._objects = _image_cache.get(self.image_path, self.object_path)
+            self._loaded = True
+        return self._image
+    
+    @property
+    def objects(self):
+        """Lazy-load object mask from disk or cache."""
+        if not self._loaded:
+            self._image, self._objects = _image_cache.get(self.image_path, self.object_path)
+            self._loaded = True
+        return self._objects
 
 class SceneInfo(NamedTuple):
     point_cloud: BasicPointCloud
@@ -102,14 +165,14 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder, objects_fol
             skipped_count += 1
             continue
             
-        image = Image.open(image_path)
         # Also use full path for object masks to support nested directories
         object_relative_path = extr.name.replace(os.path.splitext(extr.name)[1], '.png')
         object_path = os.path.join(objects_folder, object_relative_path)
-        objects = Image.open(object_path) if os.path.exists(object_path) else None
-
-        cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
-                              image_path=image_path, image_name=image_name, width=width, height=height, objects=objects)
+        
+        # Don't load images here - just store paths for lazy loading
+        cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX,
+                              image_path=image_path, image_name=image_name, 
+                              width=width, height=height, object_path=object_path)
         cam_infos.append(cam_info)
     sys.stdout.write('\n')
     if skipped_count > 0:

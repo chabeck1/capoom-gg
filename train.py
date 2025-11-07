@@ -192,6 +192,11 @@ def training_report(iteration, Ll1, loss, l1_loss, elapsed, testing_iterations, 
                 psnr_test /= len(config['cameras'])
                 l1_test /= len(config['cameras'])          
                 print("\n[ITER {}] Evaluating {}: L1 {} PSNR {}".format(iteration, config['name'], l1_test, psnr_test))
+                
+                # Print lazy loading cache stats
+                from scene.dataset_readers import _image_cache
+                print(f"  {_image_cache.stats()}")
+                
                 if use_wandb:
                     wandb.log({config['name'] + "/loss_viewpoint - l1_loss": l1_test, config['name'] + "/loss_viewpoint - psnr": psnr_test})
         if use_wandb:
