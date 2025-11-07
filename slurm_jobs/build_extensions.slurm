@@ -2,6 +2,7 @@
 #SBATCH --job-name=build_gaussian_grouping
 #SBATCH --account=entr490s113y25_class
 #SBATCH --partition=spgpu
+#SBATCH --qos=class
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4

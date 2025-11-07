@@ -49,7 +49,7 @@ class ModelParams(ParamGroup):
         self._images = "images"
         self._resolution = -1
         self._white_background = False
-        self.data_device = "cuda"
+        self.data_device = "cpu"  # Changed from "cuda" - keep images in RAM, transfer only when needed
         self.eval = False
         self.n_views = 100 
         self.random_init = False

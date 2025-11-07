@@ -47,6 +47,15 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         prefiltered=False,
         debug=pipe.debug
     )
+    
+    # Debug: print dimensions and key parameters on first render
+    if not hasattr(render, '_debug_printed'):
+        print(f"[DEBUG] First render:")
+        print(f"  Image: {int(viewpoint_camera.image_height)}x{int(viewpoint_camera.image_width)}")
+        print(f"  Camera: {viewpoint_camera.image_name}")
+        print(f"  Gaussians: {pc.get_xyz.shape[0]} points")
+        print(f"  FoV: tanfovx={tanfovx:.4f}, tanfovy={tanfovy:.4f}")
+        render._debug_printed = True
 
     rasterizer = GaussianRasterizer(raster_settings=raster_settings)
 

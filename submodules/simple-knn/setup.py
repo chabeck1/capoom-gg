@@ -27,7 +27,13 @@ setup(
             "spatial.cu", 
             "simple_knn.cu",
             "ext.cpp"],
-            extra_compile_args={"nvcc": [], "cxx": cxx_compiler_flags})
+            extra_compile_args={
+                "nvcc": [
+                    "-gencode=arch=compute_80,code=sm_80",  # A100
+                    "-gencode=arch=compute_86,code=sm_86"   # A40
+                ], 
+                "cxx": cxx_compiler_flags
+            })
         ],
     cmdclass={
         'build_ext': BuildExtension

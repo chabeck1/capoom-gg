@@ -2,6 +2,7 @@
 #SBATCH --job-name=gg_removal
 #SBATCH --account=entr490s113y25_class
 #SBATCH --partition=spgpu
+#SBATCH --qos=class
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4

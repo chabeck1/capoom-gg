@@ -65,6 +65,7 @@ def getNerfppNorm(cam_info):
 
 def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder, objects_folder):
     cam_infos = []
+    skipped_count = 0
     for idx, key in enumerate(cam_extrinsics):
         sys.stdout.write('\r')
         # the exact output you're looking for:
@@ -92,16 +93,27 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder, objects_fol
         else:
             assert False, "Colmap camera model not handled: only undistorted datasets (PINHOLE or SIMPLE_PINHOLE cameras) supported!"
 
-        image_path = os.path.join(images_folder, os.path.basename(extr.name))
+        # Use full path from COLMAP to support nested image directories
+        image_path = os.path.join(images_folder, extr.name)
         image_name = os.path.basename(image_path).split(".")[0]
-        image = Image.open(image_path) if os.path.exists(image_path) else None
-        object_path = os.path.join(objects_folder, image_name + '.png')
+        
+        # Skip this camera if image doesn't exist (for subsets)
+        if not os.path.exists(image_path):
+            skipped_count += 1
+            continue
+            
+        image = Image.open(image_path)
+        # Also use full path for object masks to support nested directories
+        object_relative_path = extr.name.replace(os.path.splitext(extr.name)[1], '.png')
+        object_path = os.path.join(objects_folder, object_relative_path)
         objects = Image.open(object_path) if os.path.exists(object_path) else None
 
         cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
                               image_path=image_path, image_name=image_name, width=width, height=height, objects=objects)
         cam_infos.append(cam_info)
     sys.stdout.write('\n')
+    if skipped_count > 0:
+        print(f"Loaded {len(cam_infos)} cameras, skipped {skipped_count} missing images")
     return cam_infos
 
 def fetchPly(path):
