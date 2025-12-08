@@ -41,7 +41,7 @@ source ~/.bashrc
 conda activate gaussian_grouping
 
 # Navigate to project directory
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 
 # Default scene (can customize)
 SCENE=${1:-"mcity_sync_1002"}

@@ -27,7 +27,7 @@ source ~/.bashrc
 conda activate gaussian_grouping
 
 # Navigate to project directory
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 
 echo "Dataset: mcity_sync_12498 (12,498 images)"
 echo "Output: output/mcity_sync_12498"

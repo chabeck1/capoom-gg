@@ -27,7 +27,7 @@ source ~/.bashrc
 conda activate gaussian_grouping
 
 # Navigate to project directory
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 
 echo "Dataset: bear (96 images)"
 echo "Output: output/bear_constant_mem"

@@ -12,7 +12,7 @@
 #SBATCH --output=logs/gen_sam_masks_%j.out
 #SBATCH --error=logs/gen_sam_masks_%j.err
 
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 source activate_env.sh
 
 echo "========================================="

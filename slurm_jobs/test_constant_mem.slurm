@@ -7,8 +7,8 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --mem=16GB
 #SBATCH --time=00:10:00
-#SBATCH --output=/home/chabeck/gaussian-grouping/logs/test_constant_mem_%j.log
-#SBATCH --error=/home/chabeck/gaussian-grouping/logs/test_constant_mem_%j.err
+#SBATCH --output=$HOME/gaussian-grouping/logs/test_constant_mem_%j.log
+#SBATCH --error=$HOME/gaussian-grouping/logs/test_constant_mem_%j.err
 
 # Load CUDA
 module load cuda/11.3.0
@@ -26,7 +26,7 @@ echo "Node: $SLURM_NODELIST"
 echo "GPU: $CUDA_VISIBLE_DEVICES"
 echo ""
 
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 python3 test_constant_memory.py
 
 echo ""

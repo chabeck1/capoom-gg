@@ -12,7 +12,7 @@
 #SBATCH --output=logs/render_custom_%j.out
 #SBATCH --error=logs/render_custom_%j.err
 
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 source activate_env.sh
 
 echo "========================================="

@@ -25,7 +25,7 @@ echo "Installing GLEW..."
 conda install -c conda-forge glew -y
 
 # Build SIBR
-cd /home/chabeck/gaussian-grouping/gaussian-splatting/SIBR_viewers
+cd $HOME/gaussian-grouping/gaussian-splatting/SIBR_viewers
 rm -rf build
 
 echo "Running cmake..."

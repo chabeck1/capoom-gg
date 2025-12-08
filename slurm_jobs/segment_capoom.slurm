@@ -15,8 +15,8 @@ module load cuda/11.3.0
 conda activate gaussian_grouping
 
 # Set paths
-INPUT_PLY="/home/chabeck/gaussian-grouping/output/capoom_ply/point_cloud/iteration_100/point_cloud.ply"
-OUTPUT_DIR="/home/chabeck/gaussian-grouping/output/capoom_ply/point_cloud/iteration_100"
+INPUT_PLY="$HOME/gaussian-grouping/output/capoom_ply/point_cloud/iteration_100/point_cloud.ply"
+OUTPUT_DIR="$HOME/gaussian-grouping/output/capoom_ply/point_cloud/iteration_100"
 
 echo "Starting segmentation on CAPOOM point cloud"
 echo "Input: $INPUT_PLY"

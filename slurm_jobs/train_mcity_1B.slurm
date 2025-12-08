@@ -10,11 +10,11 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --time=08:00:00
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --output=/home/chabeck/gaussian-grouping/logs/train_mcity_1B_%j.out
-#SBATCH --error=/home/chabeck/gaussian-grouping/logs/train_mcity_1B_%j.err
+#SBATCH --output=$HOME/gaussian-grouping/logs/train_mcity_1B_%j.out
+#SBATCH --error=$HOME/gaussian-grouping/logs/train_mcity_1B_%j.err
 
 # Environment setup
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 source activate_env.sh
 
 echo "========================================="

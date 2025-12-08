@@ -14,7 +14,7 @@
 #SBATCH --error=logs/train_mcity_grouping_highres_%j.err
 
 # Environment setup
-cd /home/chabeck/gaussian-grouping
+cd $HOME/gaussian-grouping
 source activate_env.sh
 
 echo "========================================="
