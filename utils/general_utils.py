@@ -14,6 +14,7 @@ import sys
 from datetime import datetime
 import numpy as np
 import random
+from PIL import Image
 
 def inverse_sigmoid(x):
     return torch.log(x/(1-x))
@@ -25,6 +26,24 @@ def PILtoTorch(pil_image, resolution):
         return resized_image.permute(2, 0, 1)
     else:
         return resized_image.unsqueeze(dim=-1).permute(2, 0, 1)
+
+def PILtoTorchMask(pil_image, resolution):
+    """Convert PIL mask to torch tensor WITHOUT dividing by 255 (keep as class IDs)"""
+    # Convert to grayscale if RGB (masks should be single channel)
+    if pil_image.mode == 'RGB':
+        pil_image = pil_image.convert('L')
+    
+    resized_image_PIL = pil_image.resize(resolution, resample=Image.NEAREST)  # Use NEAREST for masks
+    resized_image = torch.from_numpy(np.array(resized_image_PIL))
+    
+    # Masks should be [H, W] not [C, H, W]
+    if len(resized_image.shape) == 2:
+        return resized_image.unsqueeze(0)  # Add channel dim: [1, H, W]
+    elif len(resized_image.shape) == 3:
+        # Take first channel only (all channels should be identical for grayscale masks)
+        return resized_image[:, :, 0].unsqueeze(0)
+    else:
+        return resized_image
 
 def get_expon_lr_func(
     lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000

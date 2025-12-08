@@ -65,7 +65,11 @@ def id2rgb(id, max_num_obj=256):
     return rgb
 
 def visualize_obj(objects):
-    rgb_mask = np.zeros((*objects.shape[-2:], 3), dtype=np.uint8)
+    # Ensure objects is (H, W)
+    if objects.ndim == 3 and objects.shape[0] == 1:
+        objects = objects[0]
+
+    rgb_mask = np.zeros((objects.shape[0], objects.shape[1], 3), dtype=np.uint8)
     all_obj_ids = np.unique(objects)
     for id in all_obj_ids:
         colored_mask = id2rgb(id)

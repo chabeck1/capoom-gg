@@ -162,15 +162,39 @@ class GaussianModel:
         self.xyz_gradient_accum = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
         self.denom = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
 
-        l = [
-            {'params': [self._xyz], 'lr': training_args.position_lr_init * self.spatial_lr_scale, "name": "xyz"},
-            {'params': [self._features_dc], 'lr': training_args.feature_lr, "name": "f_dc"},
-            {'params': [self._features_rest], 'lr': training_args.feature_lr / 20.0, "name": "f_rest"},
-            {'params': [self._opacity], 'lr': training_args.opacity_lr, "name": "opacity"},
-            {'params': [self._scaling], 'lr': training_args.scaling_lr, "name": "scaling"},
-            {'params': [self._rotation], 'lr': training_args.rotation_lr, "name": "rotation"},
-            {'params': [self._objects_dc], 'lr': training_args.feature_lr, "name": "obj_dc"},
-        ]
+        l = []
+        
+        if training_args.position_lr_init > 0:
+            l.append({'params': [self._xyz], 'lr': training_args.position_lr_init * self.spatial_lr_scale, "name": "xyz"})
+        else:
+            self._xyz.requires_grad = False
+            
+        if training_args.feature_lr > 0:
+            l.append({'params': [self._features_dc], 'lr': training_args.feature_lr, "name": "f_dc"})
+            l.append({'params': [self._features_rest], 'lr': training_args.feature_lr / 20.0, "name": "f_rest"})
+        else:
+            self._features_dc.requires_grad = False
+            self._features_rest.requires_grad = False
+            
+        if training_args.opacity_lr > 0:
+            l.append({'params': [self._opacity], 'lr': training_args.opacity_lr, "name": "opacity"})
+        else:
+            self._opacity.requires_grad = False
+            
+        if training_args.scaling_lr > 0:
+            l.append({'params': [self._scaling], 'lr': training_args.scaling_lr, "name": "scaling"})
+        else:
+            self._scaling.requires_grad = False
+            
+        if training_args.rotation_lr > 0:
+            l.append({'params': [self._rotation], 'lr': training_args.rotation_lr, "name": "rotation"})
+        else:
+            self._rotation.requires_grad = False
+            
+        if training_args.grouping_lr > 0:
+            l.append({'params': [self._objects_dc], 'lr': training_args.grouping_lr, "name": "obj_dc"})
+        else:
+            self._objects_dc.requires_grad = False
 
         self.optimizer = torch.optim.Adam(l, lr=0.0, eps=1e-15)
         self.xyz_scheduler_args = get_expon_lr_func(lr_init=training_args.position_lr_init*self.spatial_lr_scale,
@@ -208,7 +232,7 @@ class GaussianModel:
             {'params': [self._opacity], 'lr': training_args.opacity_lr, "name": "opacity"},
             {'params': [self._scaling], 'lr': training_args.scaling_lr, "name": "scaling"},
             {'params': [self._rotation], 'lr': training_args.rotation_lr, "name": "rotation"},
-            {'params': [self._objects_dc], 'lr': training_args.feature_lr, "name": "obj_dc"},
+            {'params': [self._objects_dc], 'lr': training_args.grouping_lr, "name": "obj_dc"},
         ]
 
         self.optimizer = torch.optim.Adam(l, lr=0.0, eps=1e-15)
@@ -341,7 +365,7 @@ class GaussianModel:
             {'params': [self._opacity], 'lr': training_args.opacity_lr, "name": "opacity"},
             {'params': [self._scaling], 'lr': training_args.scaling_lr, "name": "scaling"},
             {'params': [self._rotation], 'lr': training_args.rotation_lr, "name": "rotation"},
-            {'params': [self._objects_dc], 'lr': training_args.feature_lr, "name": "obj_dc"}  # Assuming there's a learning rate for objects_dc in training_args
+            {'params': [self._objects_dc], 'lr': training_args.grouping_lr, "name": "obj_dc"}  # Assuming there's a learning rate for objects_dc in training_args
         ]
 
         self.optimizer = torch.optim.Adam(l, lr=0.0, eps=1e-15)
@@ -410,10 +434,20 @@ class GaussianModel:
 
         extra_f_names = [p.name for p in plydata.elements[0].properties if p.name.startswith("f_rest_")]
         extra_f_names = sorted(extra_f_names, key = lambda x: int(x.split('_')[-1]))
-        assert len(extra_f_names)==3*(self.max_sh_degree + 1) ** 2 - 3
-        features_extra = np.zeros((xyz.shape[0], len(extra_f_names)))
-        for idx, attr_name in enumerate(extra_f_names):
-            features_extra[:, idx] = np.asarray(plydata.elements[0][attr_name])
+        
+        # assert len(extra_f_names)==3*(self.max_sh_degree + 1) ** 2 - 3
+        num_extra_features_needed = 3 * (self.max_sh_degree + 1) ** 2 - 3
+        features_extra = np.zeros((xyz.shape[0], num_extra_features_needed))
+        
+        if len(extra_f_names) > 0:
+            temp_features = np.zeros((xyz.shape[0], len(extra_f_names)))
+            for idx, attr_name in enumerate(extra_f_names):
+                temp_features[:, idx] = np.asarray(plydata.elements[0][attr_name])
+            
+            # Copy what we have, leave the rest as zeros
+            min_len = min(len(extra_f_names), num_extra_features_needed)
+            features_extra[:, :min_len] = temp_features[:, :min_len]
+
         # Reshape (P,F*SH_coeffs) to (P, F, SH_coeffs except DC)
         features_extra = features_extra.reshape((features_extra.shape[0], 3, (self.max_sh_degree + 1) ** 2 - 1))
 
@@ -430,8 +464,14 @@ class GaussianModel:
             rots[:, idx] = np.asarray(plydata.elements[0][attr_name])
 
         objects_dc = np.zeros((xyz.shape[0], self.num_objects, 1))
-        for idx in range(self.num_objects):
-            objects_dc[:,idx,0] = np.asarray(plydata.elements[0]["obj_dc_"+str(idx)])
+        if "obj_dc_0" in [p.name for p in plydata.elements[0].properties]:
+            for idx in range(self.num_objects):
+                objects_dc[:,idx,0] = np.asarray(plydata.elements[0]["obj_dc_"+str(idx)])
+        else:
+            print("Warning: obj_dc attributes not found in PLY. Initializing randomly.")
+            C0 = 0.28209479177387814
+            rand_vals = np.random.rand(xyz.shape[0], self.num_objects)
+            objects_dc[:,:,0] = (rand_vals - 0.5) / C0
 
         self._xyz = nn.Parameter(torch.tensor(xyz, dtype=torch.float, device="cuda").requires_grad_(True))
         self._features_dc = nn.Parameter(torch.tensor(features_dc, dtype=torch.float, device="cuda").transpose(1, 2).contiguous().requires_grad_(True))
@@ -441,6 +481,7 @@ class GaussianModel:
         self._rotation = nn.Parameter(torch.tensor(rots, dtype=torch.float, device="cuda").requires_grad_(True))
         self._objects_dc = nn.Parameter(torch.tensor(objects_dc, dtype=torch.float, device="cuda").transpose(1, 2).contiguous().requires_grad_(True))
 
+        self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
         self.active_sh_degree = self.max_sh_degree
 
     def replace_tensor_to_optimizer(self, tensor, name):
@@ -480,13 +521,19 @@ class GaussianModel:
         valid_points_mask = ~mask
         optimizable_tensors = self._prune_optimizer(valid_points_mask)
 
-        self._xyz = optimizable_tensors["xyz"]
-        self._features_dc = optimizable_tensors["f_dc"]
-        self._features_rest = optimizable_tensors["f_rest"]
-        self._opacity = optimizable_tensors["opacity"]
-        self._scaling = optimizable_tensors["scaling"]
-        self._rotation = optimizable_tensors["rotation"]
-        self._objects_dc = optimizable_tensors["obj_dc"]
+        def _get_pruned(name, original_tensor):
+            if name in optimizable_tensors:
+                return optimizable_tensors[name]
+            else:
+                return nn.Parameter(original_tensor[valid_points_mask])
+
+        self._xyz = _get_pruned("xyz", self._xyz)
+        self._features_dc = _get_pruned("f_dc", self._features_dc)
+        self._features_rest = _get_pruned("f_rest", self._features_rest)
+        self._opacity = _get_pruned("opacity", self._opacity)
+        self._scaling = _get_pruned("scaling", self._scaling)
+        self._rotation = _get_pruned("rotation", self._rotation)
+        self._objects_dc = _get_pruned("obj_dc", self._objects_dc)
 
         self.xyz_gradient_accum = self.xyz_gradient_accum[valid_points_mask]
 

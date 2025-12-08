@@ -30,6 +30,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
     gaussians.training_setup(opt)
     num_classes = dataset.num_classes
     print("Num classes: ",num_classes)
+    
     classifier = torch.nn.Conv2d(gaussians.num_objects, num_classes, kernel_size=1)
     cls_criterion = torch.nn.CrossEntropyLoss(reduction='none')
     cls_optimizer = torch.optim.Adam(classifier.parameters(), lr=5e-4)
@@ -86,7 +87,9 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         # Object Loss
         gt_obj = viewpoint_cam.objects.cuda().long()
         logits = classifier(objects)
-        loss_obj = cls_criterion(logits.unsqueeze(0), gt_obj.unsqueeze(0)).squeeze().mean()
+        # gt_obj is [1, H, W], logits is [C, H, W]. 
+        # Input to CrossEntropyLoss: [1, C, H, W], Target: [1, H, W]
+        loss_obj = cls_criterion(logits.unsqueeze(0), gt_obj).squeeze().mean()
         loss_obj = loss_obj / torch.log(torch.tensor(num_classes))  # normalize to (0,1)
 
         # Loss
@@ -236,7 +239,13 @@ if __name__ == "__main__":
         print(f"Error: Failed to parse the JSON configuration file: {e}")
         exit(1)
 
-    args.densify_until_iter = config.get("densify_until_iter", 15000)
+    # Only override if not explicitly set by user (check if default)
+    # But argparse doesn't easily tell us if it was default.
+    # However, we know we passed 0 in the SLURM script.
+    # If args.densify_until_iter is 0, we should probably keep it 0.
+    if args.densify_until_iter != 0:
+        args.densify_until_iter = config.get("densify_until_iter", 15000)
+        
     args.num_classes = config.get("num_classes", 200)
     args.reg3d_interval = config.get("reg3d_interval", 2)
     args.reg3d_k = config.get("reg3d_k", 5)

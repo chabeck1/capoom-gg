@@ -85,6 +85,9 @@ class Scene:
                                                             "point_cloud",
                                                             "iteration_" + str(self.loaded_iter),
                                                             "point_cloud.ply"))
+        elif args.start_ply:
+            print(f"Loading initial PLY from {args.start_ply}")
+            self.gaussians.load_ply(args.start_ply)
         else:
             self.gaussians.create_from_pcd(scene_info.point_cloud, self.cameras_extent)
 
