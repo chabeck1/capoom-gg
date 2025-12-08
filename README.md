@@ -8,9 +8,20 @@ This repository contains our CAPOOM project implementation for creating digital 
 
 ## 🚀 Quick Start for Team Members
 
-**→ [TEAM_SETUP.md](TEAM_SETUP.md)** - Complete setup guide for new team members
+**→ [docs_user/TEAM_SETUP.md](docs_user/TEAM_SETUP.md)** - Complete setup guide for new team members
 
 **→ [docs_user/CAPOOM_WORKFLOW.md](docs_user/CAPOOM_WORKFLOW.md)** - Our project workflow
+
+---
+
+## 🛠️ Our Modifications (CAPOOM)
+
+We have extended the original Gaussian Grouping with several key features for large-scale scene processing:
+
+1.  **Lazy Loading**: Images and masks are loaded on-demand rather than all at once, significantly reducing RAM usage.
+2.  **Constant Memory Mode**: A strict memory management mode that keeps RAM usage constant regardless of dataset size (see `docs_user/CONSTANT_MEMORY_MODE.md`).
+3.  **SAM Mask Generation**: Tools to generate high-quality instance masks using Segment Anything Model (SAM) for datasets that lack them (see `generate_sam_masks.py`).
+4.  **SLURM Integration**: Comprehensive job scripts for running on clusters (see `slurm_jobs/`).
 
 ---
 
