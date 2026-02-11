@@ -6,6 +6,18 @@ This repository contains our CAPOOM project implementation for creating digital 
 
 ---
 
+## 📋 Portfolio & Technical Evidence
+
+For detailed technical documentation of the work completed:
+
+**→ [PORTFOLIO_TECHNICAL_EVIDENCE.md](PORTFOLIO_TECHNICAL_EVIDENCE.md)** - Complete technical portfolio with evidence for all claims
+
+**→ [MEMORY_OPTIMIZATION_EVIDENCE.md](MEMORY_OPTIMIZATION_EVIDENCE.md)** - Deep dive into constant memory pipeline (33× scale increase)
+
+**→ [AUTOMATION_EVIDENCE.md](AUTOMATION_EVIDENCE.md)** - Distributed SLURM automation system (60× faster annotation)
+
+---
+
 ## 🚀 Quick Start for Team Members
 
 **→ [docs_user/TEAM_SETUP.md](docs_user/TEAM_SETUP.md)** - Complete setup guide for new team members
